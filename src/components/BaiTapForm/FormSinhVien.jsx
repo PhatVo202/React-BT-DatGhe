@@ -54,11 +54,13 @@ class FormSinhVien extends Component {
   handleBlur = (e) => {
     let message = "";
     const { validity, title, name } = e.target;
-    const { valueMissing } = validity;
-    console.log(e);
+    const { valueMissing, patternMismatch } = validity;
 
     if (valueMissing) {
       message = `${title} is required`;
+    }
+    if (patternMismatch) {
+      message = `${title} is invalid partern`;
     }
 
     this.setState({

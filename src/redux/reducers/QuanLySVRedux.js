@@ -2,9 +2,9 @@ const stateDefault = {
   mangSV: [
     {
       maSV: 1,
-      hoTen: "Nguyen Van A",
-      sdt: "0929440642",
-      email: "9a10voletruongphat@gmail.com",
+      hoTen: "Thai",
+      sdt: "0929440643",
+      email: "thai@gmail.com",
     },
     {
       maSV: 2,
