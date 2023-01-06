@@ -2,6 +2,10 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 
 class FormSinhVien extends Component {
+  constructor(props) {
+    super(props);
+    this.formRef = React.createRef();
+  }
   state = {
     values: {
       maSV: "",
@@ -10,85 +14,102 @@ class FormSinhVien extends Component {
       email: "",
     },
     errors: {
-      maSV: "a",
-      hoTen: "b",
+      maSV: "",
+      hoTen: "",
       sdt: "",
       email: "",
     },
   };
 
-  renderButton = () => {
-    return (
-      <button type="submit" className="btn btn-success text-right">
-        Them sinh vien
-      </button>
-    );
+  handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (!e.target.checkValidity()) {
+      return;
+    }
+
+    if (this.props.selectedUser) {
+      this.props.dispatch({
+        type: "UPDATE_STUDENT",
+        payload: this.state.values,
+      });
+    } else {
+      this.props.dispatch({
+        type: "ADD_STUDENT",
+        payload: this.state.values,
+      });
+    }
   };
 
   handleChange = (e) => {
-    //lấy giá trị mội lần value input thay đổi bởi người dùng
-    let tagInput = e.target;
-    let { name, value, type, pattern } = tagInput;
-
-    //tao ra bien hung gia tri error
-    let errorMessage = "";
-
-    //Kiểm tra bất kì rong
-    if (value.trim() === "") {
-      errorMessage = name + " " + "Khong dc de trong";
-    }
-
-    //Kiem tra email
-    if (type === "number" || type === "email") {
-      const regular = new RegExp(pattern);
-      if (!regular.test(value)) {
-        errorMessage = name + " Khong dung dinh dang";
-      }
-    }
-
-    //kiem tra number
-    if (type === "number") {
-      const regular = new RegExp(pattern);
-      if (!regular.test(value)) {
-        errorMessage = name + " Khong dung dinh dang";
-      }
-    }
-
-    //tao ra bien value, error sau khi cap nhat
-    let values = { ...this.state.values, [name]: value };
-    let errors = { ...this.state.errors, [name]: errorMessage };
-
-    //thay doi lai gia tri de render lai giao dien
+    const { name, value } = e.target;
     this.setState({
-      values: values,
-      errors: errors,
+      values: {
+        ...this.state.values,
+        [name]: value,
+      },
     });
   };
 
-  handleSubmit = (e) => {
-    //do type submit nen browser tu load lai trang
-    e.preventDefault(); //can su kien submit load lai trang
-    this.props.themSinhVien(this.state.values);
+  handleBlur = (e) => {
+    let message = "";
+    const { validity, title, name } = e.target;
+    const { valueMissing } = validity;
+    console.log(e);
+
+    if (valueMissing) {
+      message = `${title} is required`;
+    }
+
+    this.setState({
+      errors: {
+        ...this.state.errors,
+        [name]: message,
+      },
+    });
+    // if(!validity){
+    //   message =
+    // }
   };
 
+  static getDerivedStateFromProps(nextProps, currentState) {
+    if (
+      nextProps.selectedUser &&
+      currentState.values.maSV !== nextProps.selectedUser.maSV
+    ) {
+      //chuyển giá trị của props thành state
+      currentState.values = nextProps.selectedUser;
+    }
+    return currentState;
+  }
+
   render() {
+    const {
+      maSV = "",
+      hoTen = "",
+      sdt = "",
+      email = "",
+    } = this.state.values || {};
     return (
       <div className="card mb-5">
         <div className="card-header bg-dark text-white">
           <h3>Thong tin sinh vien</h3>
         </div>
         <div className="card-body">
-          <form onSubmit={this.handleSubmit}>
+          <form noValidate ref={this.formRef} onSubmit={this.handleSubmit}>
             <div className="row">
               <div className="col-6">
                 <div action="" className="form-group">
                   <p>Ma SV:</p>
                   <input
+                    value={maSV}
+                    title="Ma SV"
                     type="text"
                     className="form-control"
                     name="maSV"
-                    value={this.state.values.maSV}
+                    required
                     onChange={this.handleChange}
+                    onBlur={this.handleBlur}
                   />
                   <p className="text-danger">{this.state.errors.maSV}</p>
                 </div>
@@ -97,11 +118,14 @@ class FormSinhVien extends Component {
                 <div action="" className="form-group">
                   <p> Ho ten:</p>
                   <input
+                    value={hoTen}
+                    title="Name"
                     type="text"
+                    required
                     className="form-control"
                     name="hoTen"
-                    value={this.state.values.hoTen}
                     onChange={this.handleChange}
+                    onBlur={this.handleBlur}
                   />
                   <p className="text-danger">{this.state.errors.hoTen}</p>
                 </div>
@@ -112,12 +136,17 @@ class FormSinhVien extends Component {
                 <div action="" className="form-group">
                   <p>SDT:</p>
                   <input
+                    value={sdt}
                     type="number"
-                    className="form-control"
-                    pattern="^(0|[1-9][0-9]*)$"
+                    title="Number"
+                    required
                     name="sdt"
-                    value={this.state.values.sdt}
+                    className="form-control"
+                    // required
+                    // pattern="^(0|[1-9][0-9]*)$"
+                    // name="sdt"
                     onChange={this.handleChange}
+                    onBlur={this.handleBlur}
                   />
                   <p className="text-danger">{this.state.errors.sdt}</p>
                 </div>
@@ -126,19 +155,29 @@ class FormSinhVien extends Component {
                 <div action="" className="form-group">
                   <p> Email:</p>
                   <input
+                    value={email}
                     type="email"
-                    pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                    title="Email"
+                    required
                     className="form-control"
                     name="email"
-                    value={this.state.values.email}
+                    pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
                     onChange={this.handleChange}
+                    onBlur={this.handleBlur}
                   />
                   <p className="text-danger">{this.state.errors.email}</p>
                 </div>
               </div>
             </div>
             <div className="row ">
-              <div className="col-12 text-right">{this.renderButton()}</div>
+              <div className="col-12 text-right">
+                <button
+                  disabled={!this.formRef.current?.checkValidity()}
+                  className="btn btn-success"
+                >
+                  Them Sinh Vien
+                </button>
+              </div>
             </div>
           </form>
         </div>
@@ -147,16 +186,10 @@ class FormSinhVien extends Component {
   }
 }
 
-const mapDispatchToProps = (dispatch) => {
+const mapStateToProps = (state) => {
   return {
-    themSinhVien: (sinhVien) => {
-      const action = {
-        type: "THEM_SINH_VIEN",
-        sinhVien,
-      };
-      dispatch(action);
-    },
+    selectedUser: state.QuanLySVReducer.selectedUser,
   };
 };
 
-export default connect(null, mapDispatchToProps)(FormSinhVien);
+export default connect(mapStateToProps)(FormSinhVien);

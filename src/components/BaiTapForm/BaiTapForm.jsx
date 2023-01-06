@@ -6,7 +6,6 @@ export default class BaiTapForm extends Component {
   render() {
     return (
       <div className="container">
-        <h3>Bai Tap Form Sinh Vien</h3>
         <FormSinhVien />
         <TableSinhVien />
       </div>
